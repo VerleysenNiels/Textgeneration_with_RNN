@@ -13,13 +13,13 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 plt.style.use('dark_background')
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Embedding, LSTM, GlobalMaxPooling1D, SpatialDropout1D
+from keras.layers import Dense, LSTM
 from keras.losses import categorical_crossentropy
+from keras.callbacks import ModelCheckpoint
+from keras.utils import np_utils
 
 
 class LSTM(object):
@@ -44,41 +44,59 @@ class LSTM(object):
         self.char_to_int = dict((c, i) for i, c in enumerate(chars))
         
         """Summarize"""
-        n_chars = len(self.raw_text)
-        n_vocab = len(chars)
-        print("Total Characters: ", n_chars)
-        print("Total Vocab: ", n_vocab)
+        self.n_chars = len(self.raw_text)
+        self.n_vocab = len(chars)
+        print("Total Characters: ", self.n_chars)
+        print("Total Vocab: ", self.n_vocab)
         
         """Prepare the dataset of input to output pairs encoded as integers"""
         seq_length = 100
-        dataX = []
+        self.dataX = []
         dataY = []
-        for i in range(0, n_chars - seq_length, 1):
+        for i in range(0, self.n_chars - seq_length, 1):
             	seq_in = self.raw_text[i:i + seq_length]
             	seq_out = self.raw_text[i + seq_length]
-            	dataX.append([self.char_to_int[char] for char in seq_in])
+            	self.dataX.append([self.char_to_int[char] for char in seq_in])
             	dataY.append(self.char_to_int[seq_out])
             
         """Reshape X to be [samples, time steps, features]"""
-        X = np.reshape(dataX, (n_patterns, seq_length, 1))
+        X = np.reshape(self.dataX, (len(self.dataX), seq_length, 1))
         """Normalize the data"""
-        self.X = X / float(n_vocab)
+        self.X = X / float(self.n_vocab)
         """One hot encode the output variable"""
         self.Y = np_utils.to_categorical(dataY)
     
     def build(self):
         self.model = Sequential()
-        self.model.add(LSTM(512, dropout=0.5, recurrent_dropout=0.5))
+        self.model.add(LSTM(512, input_shape=(self.X.shape[1], self.X.shape[2]), dropout=0.5, recurrent_dropout=0.5))
         self.model.add(LSTM(512, dropout=0.5, recurrent_dropout=0.5))
         self.model.add(Dense(self.Y.shape[1], activation='softmax')) # Next character
         
-        model_lstm.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
-    
+        self.model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
+        
+        filepath="./Weights/weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
+        checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+        self.callbacks_list = [checkpoint]
+        
     def train(self, file):
-        print("ToDo")
+        self.model.fit(self.X, self.Y, epochs=40, batch_size=250, callbacks=self.callbacks_list)
     
     def generate(size):
-        print("ToDo")
+        start = np.random.randint(0, len(self.dataX)-1)
+        pattern = self.dataX[start]
+        
+        for i in range(size):
+            	x = np.reshape(pattern, (1, len(pattern), 1))
+            	x = x / float(self.n_vocab)
+            	prediction = self.model.predict(x, verbose=0)
+            	index = np.argmax(prediction)
+            	result = self.int_to_char[index]
+            	seq_in = [int_to_char[value] for value in pattern]
+            	sys.stdout.write(result)
+            	pattern.append(index)
+            	pattern = pattern[1:len(pattern)]
+        
+        print("\n Done")
     
 if __name__ == '__main__':
     LSTM()
