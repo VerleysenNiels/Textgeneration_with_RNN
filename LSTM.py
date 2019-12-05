@@ -15,14 +15,14 @@ from matplotlib import pyplot as plt
 plt.style.use('dark_background')
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
-from keras.models import Sequential
-from keras.layers import Dense, LSTM
+from keras.models import Model
+from keras.layers import Dense, LSTM, Input
 from keras.losses import categorical_crossentropy
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
 
-class LSTM(object):
+class TextLSTM(object):
     
     #ToDo: add argument parser allowing this model to be run from the commandline and allow different architectures and databases
     def __init__(self):
@@ -67,18 +67,20 @@ class LSTM(object):
         self.Y = np_utils.to_categorical(dataY)
     
     def build(self):
-        self.model = Sequential()
-        self.model.add(LSTM(512, input_shape=(self.X.shape[1], self.X.shape[2]), dropout=0.5, recurrent_dropout=0.5))
-        self.model.add(LSTM(512, dropout=0.5, recurrent_dropout=0.5))
-        self.model.add(Dense(self.Y.shape[1], activation='softmax')) # Next character
+        print(self.X.shape[1])
+        inputs = Input(shape=(self.X.shape[1], self.X.shape[2]))
+        l = LSTM(512, dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(inputs)
+        l = LSTM(512, dropout=0.5, recurrent_dropout=0.5)(l)
+        outputs = Dense(self.Y.shape[1], activation='softmax')(l) # Next character
         
+        self.model = Model(inputs=inputs, outputs=outputs)
         self.model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
         
         filepath="./Weights/weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
         self.callbacks_list = [checkpoint]
         
-    def train(self, file):
+    def train(self):
         self.model.fit(self.X, self.Y, epochs=40, batch_size=250, callbacks=self.callbacks_list)
     
     def generate(size):
@@ -99,4 +101,4 @@ class LSTM(object):
         print("\n Done")
     
 if __name__ == '__main__':
-    LSTM()
+    TextLSTM()
