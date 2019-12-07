@@ -9,7 +9,6 @@ Predicting text, trained on shakespeare textfile
 """
 
 """Imports"""
-import sys
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -70,7 +69,6 @@ class TextLSTM(object):
         self.Y = np_utils.to_categorical(dataY)
     
     def build(self):
-        print(self.X.shape[1])
         inputs = Input(shape=(self.X.shape[1], self.X.shape[2]))
         l = LSTM(512, dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(inputs)
         l = LSTM(512, dropout=0.5, recurrent_dropout=0.5)(l)
@@ -89,9 +87,12 @@ class TextLSTM(object):
     def load(self, file):
         self.model.load_weights(file)
     
-    def generate(self, size):
+    def generate(self, size, name='generated_text.txt'):
         start = np.random.randint(0, len(self.dataX)-1)
         pattern = self.dataX[start]
+        
+        file = './Results/' + str(name)
+        f= open(file,"w+")
         
         for i in range(size):
             	x = np.reshape(pattern, (1, len(pattern), 1))
@@ -100,11 +101,12 @@ class TextLSTM(object):
             	index = np.argmax(prediction)
             	result = self.int_to_char[index]
             	seq_in = [self.int_to_char[value] for value in pattern]
-            	sys.stdout.write(result)
+            	f.write(result)
             	pattern.append(index)
             	pattern = pattern[1:len(pattern)]
         
         print("\n Done")
+        f.close()
     
 if __name__ == '__main__':
     TextLSTM()
