@@ -9,6 +9,7 @@ Predicting text, trained on shakespeare textfile
 """
 
 """Imports"""
+import sys
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -37,12 +38,13 @@ class TextLSTM(object):
         self.build()
         self.load('./Weights/weights-shakespeare.hdf5') #For testing trained model
         #self.train()  #Uncomment this to start training
-        self.generate(100)
+        self.generate(1000)
     
     def process_input(self, file):
         self.raw_text = open(file, 'r', encoding='utf-8').read()
         chars = sorted(list(set(self.raw_text)))
-        self.char_to_int = dict((c, i) for i, c in enumerate(chars))
+        self.char_to_int = dict((c, i) for i, c in enumerate(chars)) #Necessary for training
+        self.int_to_char = dict((i, c) for i, c in enumerate(chars)) #Necessary for generation
         
         """Summarize"""
         self.n_chars = len(self.raw_text)
@@ -97,7 +99,7 @@ class TextLSTM(object):
             	prediction = self.model.predict(x, verbose=0)
             	index = np.argmax(prediction)
             	result = self.int_to_char[index]
-            	seq_in = [int_to_char[value] for value in pattern]
+            	seq_in = [self.int_to_char[value] for value in pattern]
             	sys.stdout.write(result)
             	pattern.append(index)
             	pattern = pattern[1:len(pattern)]
