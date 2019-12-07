@@ -35,7 +35,8 @@ class TextLSTM(object):
         
         """Build model, then train on given file and produce output"""
         self.build()
-        self.train()
+        self.load('./Weights/weights-shakespeare.hdf5') #For testing trained model
+        #self.train()  #Uncomment this to start training
         self.generate(100)
     
     def process_input(self, file):
@@ -83,7 +84,10 @@ class TextLSTM(object):
     def train(self):
         self.model.fit(self.X, self.Y, epochs=40, batch_size=250, callbacks=self.callbacks_list)
     
-    def generate(size):
+    def load(self, file):
+        self.model.load_weights(file)
+    
+    def generate(self, size):
         start = np.random.randint(0, len(self.dataX)-1)
         pattern = self.dataX[start]
         
