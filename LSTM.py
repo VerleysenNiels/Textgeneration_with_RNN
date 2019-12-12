@@ -5,7 +5,7 @@ Created on Wed Dec  4 15:54:07 2019
 
 @author: Niels Verleysen
 
-Predicting text, trained on shakespeare textfile
+Predicting text, trained on given textfile
 """
 
 """Imports"""
@@ -28,16 +28,16 @@ class TextLSTM(object):
     def __init__(self):
         description = R'''LSTM network for text prediction, trained on given dataset.'''
         
-        file = "./Datasets/shakespeare.txt"
+        file = "./Datasets/NY_long_names.txt"
         
         """Process input file"""
         self.process_input(file)
         
         """Build model, then train on given file and produce output"""
         self.build()
-        self.load('./Weights/weights-shakespeare.hdf5') #For testing trained model
+        self.load('./Weights/weights-names.hdf5') #For testing trained model
         #self.train()  #Uncomment this to start training
-        self.generate(1000)
+        self.generate(7)
     
     def process_input(self, file):
         self.raw_text = open(file, 'r', encoding='utf-8').read()
@@ -52,7 +52,7 @@ class TextLSTM(object):
         print("Total Vocab: ", self.n_vocab)
         
         """Prepare the dataset of input to output pairs encoded as integers"""
-        seq_length = 100
+        seq_length = 7
         self.dataX = []
         dataY = []
         for i in range(0, self.n_chars - seq_length, 1):
@@ -82,7 +82,7 @@ class TextLSTM(object):
         self.callbacks_list = [checkpoint]
         
     def train(self):
-        self.model.fit(self.X, self.Y, epochs=40, batch_size=250, callbacks=self.callbacks_list)
+        self.model.fit(self.X, self.Y, epochs=40, batch_size=200, callbacks=self.callbacks_list)
     
     def load(self, file):
         self.model.load_weights(file)
