@@ -35,8 +35,8 @@ class TextGRU(object):
         
         """Build model, then train on given file and produce output"""
         self.build()
-        #self.load('./Weights/weights-shakespeare.hdf5') #For testing trained model
-        self.train()  #Uncomment this to start training
+        self.load('./Weights/gru-weights-names.hdf5') #For testing trained model
+        #self.train()  #Uncomment this to start training
         self.generate(80)
     
     def process_input(self, file):
