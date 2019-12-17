@@ -11,6 +11,7 @@ Currently supported models: simple RNN, LSTM and GRU.
 """
 
 import argparse
+import sys
 
 class TextPredictor(object):
    
@@ -52,11 +53,12 @@ class TextPredictor(object):
         Description: 
             Build a new model and train it on a given dataset.
         Example:
-            python main.py train ./datasets/NY_long_names.py LSTM 512|512
+            python main.py train ./datasets/NY_long_names.txt LSTM 512|512 -e 15 -b 100
         '''
-        parser = self._build_parser(description)
-        parser.add_argument('epochs', help='Number of training epochs, default is 15', default=15)
-        parser.add_argument('batch_size', help='Batch size for training, defautl is 100', default=100)
+        print("Train")
+        parser = self.build_parser(description)
+        parser.add_argument('-e', '--epochs', help='Number of training epochs, default is 15', default=15)
+        parser.add_argument('-b', '--batch_size', help='Batch size for training, defautl is 100', default=100)
         args = parser.parse_args(sys.argv[2:])
         
         model = self.build_model(args.model_type, args.architecture, args.dataset)
@@ -67,9 +69,10 @@ class TextPredictor(object):
         Description: 
             Build a model, load the weights and generate text in a given file.
         Example:
-            python main.py produce ./Datasets/NY_long_names.py LSTM 512|512 ./Weights/rnn-weights-names.hdf5 ./Results/example_names.txt 50
+            python main.py produce ./Datasets/NY_long_names.txt LSTM 512|512 ./Weights/lstm-weights-names.hdf5 ./Results/example_names.txt 50
         '''
-        parser = self._build_parser(description)        
+        print("Produce")
+        parser = self.build_parser(description)        
         parser.add_argument('weights', help='Weights to be loaded. If you have no weights yet, you can train them using the train command. The weights will then be saved in the ./Weights folder.')
         parser.add_argument('output', help='Path to the output file')
         parser.add_argument('characters', help='Number of characters to produce')
@@ -79,7 +82,7 @@ class TextPredictor(object):
         model.load(args.weights)
         model.generate(args.characters, args.output)
         
-    def _build_parser(self, description):
+    def build_parser(self, description):
         '''Build basic parser used in train and produce'''
         parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
         parser.add_argument('dataset', help='Path to textfile containing the training data, this is necessary for determining possible output characters')
