@@ -10,14 +10,10 @@ Predicting text, trained on given textfile
 
 """Imports"""
 import numpy as np
-import pandas as pd
 from matplotlib import pyplot as plt
 plt.style.use('dark_background')
-from sklearn.model_selection import train_test_split
-from keras.utils import to_categorical
 from keras.models import Model
-from keras.layers import Dense, LSTM, Input
-from keras.losses import categorical_crossentropy
+from keras.layers import Dense, LSTM, Input, Flatten
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
@@ -55,14 +51,16 @@ class TextLSTM(object):
     
     def build(self, architecture):
         inputs = Input(shape=(self.X.shape[1], self.X.shape[2]))
-        previous_layer = inputs
+        l = inputs
         for layer in architecture:
-            next_layer = LSTM(layer, dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(previous_layer)
-            previous_layer = next_layer
-        outputs = Dense(self.Y.shape[1], activation='softmax')(previous_layer) # Next character
+            l = LSTM(int(layer), dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(l)
+        fl = Flatten()(l)
+        outputs = Dense(self.Y.shape[1], activation='softmax')(fl) # Next character
         
         self.model = Model(inputs=inputs, outputs=outputs)
         self.model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
+        
+        self.model.summary()
         
         filepath="./Weights/weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')

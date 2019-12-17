@@ -13,6 +13,10 @@ Currently supported models: simple RNN, LSTM and GRU.
 import argparse
 import sys
 
+from LSTM import TextLSTM
+from GRU import TextGRU
+from RNN import TextRNN
+
 class TextPredictor(object):
    
     def __init__(self):
@@ -28,11 +32,12 @@ class TextPredictor(object):
             print('Unrecognized command')
             parser.print_help()
             exit(1)
+        
         getattr(self, args.command)()
     
     def build_model(self, model_type, architecture, dataset):
         '''Basic step to set up the required model, it can then be trained or used for prediction. Architecture defined by description argument.'''
-        model = Null
+        model = None
         if model_type == "SimpleRNN":
             model = TextRNN()
         elif model_type == "LSTM":
@@ -53,34 +58,32 @@ class TextPredictor(object):
         Description: 
             Build a new model and train it on a given dataset.
         Example:
-            python main.py train ./datasets/NY_long_names.txt LSTM 512|512 -e 15 -b 100
+            python main.py train "./datasets/NY_long_names.txt" "LSTM" "512|512" -e 15 -b 100
         '''
-        print("Train")
         parser = self.build_parser(description)
         parser.add_argument('-e', '--epochs', help='Number of training epochs, default is 15', default=15)
         parser.add_argument('-b', '--batch_size', help='Batch size for training, defautl is 100', default=100)
         args = parser.parse_args(sys.argv[2:])
         
         model = self.build_model(args.model_type, args.architecture, args.dataset)
-        model.train()
+        model.train(int(args.epochs), int(args.batch_size))
         
     def produce(self):
         description = R'''
         Description: 
             Build a model, load the weights and generate text in a given file.
         Example:
-            python main.py produce ./Datasets/NY_long_names.txt LSTM 512|512 ./Weights/lstm-weights-names.hdf5 ./Results/example_names.txt 50
+            python main.py produce "./Datasets/NY_long_names.txt" "LSTM" "512|512" "./Weights/lstm-weights-names.hdf5" "example_names.txt" "50"
         '''
-        print("Produce")
         parser = self.build_parser(description)        
         parser.add_argument('weights', help='Weights to be loaded. If you have no weights yet, you can train them using the train command. The weights will then be saved in the ./Weights folder.')
-        parser.add_argument('output', help='Path to the output file')
+        parser.add_argument('output', help='Name of the output file. You can find your output in this file in the Results folder after running the command')
         parser.add_argument('characters', help='Number of characters to produce')
         args = parser.parse_args(sys.argv[2:])
         
         model = self.build_model(args.model_type, args.architecture, args.dataset)
         model.load(args.weights)
-        model.generate(args.characters, args.output)
+        model.generate(int(args.characters), args.output)
         
     def build_parser(self, description):
         '''Build basic parser used in train and produce'''
