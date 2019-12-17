@@ -24,21 +24,6 @@ from keras.utils import np_utils
 
 class TextRNN(object):
     
-    #ToDo: add argument parser allowing this model to be run from the commandline and allow different architectures and databases
-    def __init__(self):
-        description = R'''RNN network for text prediction, trained on given dataset.'''
-        
-        file = "./Datasets/NY_long_names.txt"
-        
-        """Process input file"""
-        self.process_input(file)
-        
-        """Build model, then train on given file and produce output"""
-        self.build()
-        #self.load('./Weights/rnn-weights-names.hdf5') #For testing trained model
-        self.train()  #Uncomment this to start training
-        self.generate(80)
-    
     def process_input(self, file):
         self.raw_text = open(file, 'r', encoding='utf-8').read()
         chars = sorted(list(set(self.raw_text)))
@@ -68,11 +53,13 @@ class TextRNN(object):
         """One hot encode the output variable"""
         self.Y = np_utils.to_categorical(dataY)
     
-    def build(self):
+    def build(self, architecture):
         inputs = Input(shape=(self.X.shape[1], self.X.shape[2]))
-        l = SimpleRNN(512, dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(inputs)
-        l = SimpleRNN(512, dropout=0.5, recurrent_dropout=0.5)(l)
-        outputs = Dense(self.Y.shape[1], activation='softmax')(l) # Next character
+        previous_layer = inputs
+        for layer in architecture:
+            next_layer = SimpleRNN(layer, dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(previous_layer)
+            previous_layer = next_layer
+        outputs = Dense(self.Y.shape[1], activation='softmax')(previous_layer) # Next character
         
         self.model = Model(inputs=inputs, outputs=outputs)
         self.model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
@@ -81,8 +68,8 @@ class TextRNN(object):
         checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
         self.callbacks_list = [checkpoint]
         
-    def train(self):
-        self.model.fit(self.X, self.Y, epochs=40, batch_size=200, callbacks=self.callbacks_list)
+    def train(self, epochs=15, batch_size=200):
+        self.model.fit(self.X, self.Y, epochs=epochs, batch_size=batch_size, callbacks=self.callbacks_list)
     
     def load(self, file):
         self.model.load_weights(file)
@@ -107,6 +94,3 @@ class TextRNN(object):
         
         print("\n Done")
         f.close()
-    
-if __name__ == '__main__':
-    TextRNN()

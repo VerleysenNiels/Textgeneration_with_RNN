@@ -40,9 +40,11 @@ class TextPredictor(object):
             model = TextGRU()
         else:
             print("Given model type is not supported. Supported model types are SimpleRNN, LSTM and GRU.")
-            exit(1)        
+            exit(1)
+            
+        architecture_list = architecture.split("|")
         model.process_input(dataset)
-        model.build(architecture)    
+        model.build(architecture_list)    
         return model
     
     def train(self):
@@ -53,6 +55,8 @@ class TextPredictor(object):
             python main.py train ./datasets/NY_long_names.py LSTM 512|512
         '''
         parser = self._build_parser(description)
+        parser.add_argument('epochs', help='Number of training epochs, default is 15', default=15)
+        parser.add_argument('batch_size', help='Batch size for training, defautl is 100', default=100)
         args = parser.parse_args(sys.argv[2:])
         
         model = self.build_model(args.model_type, args.architecture, args.dataset)
