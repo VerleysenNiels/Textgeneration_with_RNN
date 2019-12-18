@@ -1,4 +1,4 @@
-# RNN-playground
+# Text generation with RNN's
 Repository to play around with different RNN architectures for my thesis on temporal modeling for safer spacecrafts. I'm using python and tensorflow/keras.
 
 ## How to use
