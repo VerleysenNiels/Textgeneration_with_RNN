@@ -17,4 +17,4 @@ Training on the shakespeare dataset takes more time then I can allow at this mom
 Instead used a dataset with names from New York, can be downloaded from data.gov. I processed this dataset to only include names of seven characters or longer. The full dataset and the processed dataset can be found in the datasets folder. All three types of models were then trained on this dataset to test the code from this repository. The results are not incredibly good as I didn't try to find optimal architectures. The generated files can be found in the results folder. 
 
 After transitioning to the main.py module, these older weights don't seem to be able to be loaded in the model anymore.
-I'm currently checking if this can be fixed.
+Newly learned weights with the train command can be loaded in the model.
