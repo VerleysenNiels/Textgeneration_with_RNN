@@ -49,11 +49,11 @@ class TextPredictor(object):
         Description: 
             Build a new model and train it on a given dataset.
         Example:
-            python main.py train "./datasets/NY_long_names.txt" "LSTM" "512|512" -e 15 -b 100
+            python main.py train "./datasets/Grimm_Fairy_Tales.txt" "LSTM" "300|300|300" -e 15 -b 100
         '''
         parser = self.build_parser(description)
-        parser.add_argument('-e', '--epochs', help='Number of training epochs, default is 15', default=15)
-        parser.add_argument('-b', '--batch_size', help='Batch size for training, defautl is 100', default=100)
+        parser.add_argument('-e', '--epochs', help='Number of training epochs, default is 50', default=50)
+        parser.add_argument('-b', '--batch_size', help='Batch size for training, default is 100', default=100)
         args = parser.parse_args(sys.argv[2:])
 
         model = self.build_model(args.architecture, args.dataset)
@@ -64,7 +64,7 @@ class TextPredictor(object):
         Description: 
             Build a model, load the weights and generate text in a given file.
         Example:
-            python main.py produce "./Datasets/NY_long_names.txt" "LSTM" "512|512" "./Weights/lstm-weights-names.hdf5" "example_names.txt" "50"
+            python main.py produce "./Datasets/Grimm_Fairy_Tales.txt" "LSTM" "300|300|300" "./Weights/lstm-weights.hdf5" "example_names.txt" "50"
         '''
         parser = self.build_parser(description)
         parser.add_argument('weights', help='Weights to be loaded. If you have no weights yet, you can train them using the train command. The weights will then be saved in the ./Weights folder.', default="./Weights/lstm-weights-names.hdf5")
@@ -76,8 +76,10 @@ class TextPredictor(object):
         model.load(args.weights)
         model.generate(int(args.characters), args.output)
 
+    """
+        Build basic parser used in train and produce
+    """
     def build_parser(self, description):
-        '''Build basic parser used in train and produce'''
         parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
         parser.add_argument('dataset', help='Path to textfile containing the training data, this is necessary for determining possible output characters')
         parser.add_argument('architecture', help='Architecture of the model, defined by number of nodes in a layer and multiple layers are split by | character')

@@ -27,6 +27,7 @@ class TextLSTM(object):
     """
     def process_input(self, file):
         self.raw_text = open(file, 'r', encoding='utf-8').read()
+        self.raw_text.lower()
         chars = sorted(list(set(self.raw_text)))
         self.char_to_int = dict((c, i) for i, c in enumerate(chars)) #Necessary for training
         self.int_to_char = dict((i, c) for i, c in enumerate(chars)) #Necessary for generation
@@ -38,7 +39,7 @@ class TextLSTM(object):
         print("Total Vocab: ", self.n_vocab)
         
         """Prepare the dataset of input to output pairs encoded as integers"""
-        seq_length = 7
+        seq_length = 50
         self.dataX = []
         dataY = []
         for i in range(0, self.n_chars - seq_length, 1):
