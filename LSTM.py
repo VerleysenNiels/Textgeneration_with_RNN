@@ -10,8 +10,6 @@ Predicting text, trained on given textfile
 
 """Imports"""
 import numpy as np
-from matplotlib import pyplot as plt
-plt.style.use('dark_background')
 from keras.models import Model
 from keras.layers import Dense, LSTM, Input, Flatten
 from keras.callbacks import ModelCheckpoint
@@ -19,7 +17,14 @@ from keras.utils import np_utils
 
 
 class TextLSTM(object):
-    
+
+    def __init__(self):
+        self.preprocessed = False
+        self.network_ready = False
+
+    """
+        Preprocess the given text for training and generating
+    """
     def process_input(self, file):
         self.raw_text = open(file, 'r', encoding='utf-8').read()
         chars = sorted(list(set(self.raw_text)))
@@ -37,10 +42,10 @@ class TextLSTM(object):
         self.dataX = []
         dataY = []
         for i in range(0, self.n_chars - seq_length, 1):
-            	seq_in = self.raw_text[i:i + seq_length]
-            	seq_out = self.raw_text[i + seq_length]
-            	self.dataX.append([self.char_to_int[char] for char in seq_in])
-            	dataY.append(self.char_to_int[seq_out])
+            seq_in = self.raw_text[i:i + seq_length]
+            seq_out = self.raw_text[i + seq_length]
+            self.dataX.append([self.char_to_int[char] for char in seq_in])
+            dataY.append(self.char_to_int[seq_out])
             
         """Reshape X to be [samples, time steps, features]"""
         X = np.reshape(self.dataX, (len(self.dataX), seq_length, 1))
@@ -48,14 +53,19 @@ class TextLSTM(object):
         self.X = X / float(self.n_vocab)
         """One hot encode the output variable"""
         self.Y = np_utils.to_categorical(dataY)
-    
+
+        self.preprocessed = True
+
+    """
+        Construct network with LSTM layers based on the architecture list
+    """
     def build(self, architecture):
         inputs = Input(shape=(self.X.shape[1], self.X.shape[2]))
         l = inputs
         for layer in architecture:
             l = LSTM(int(layer), dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(l)
         fl = Flatten()(l)
-        outputs = Dense(self.Y.shape[1], activation='softmax')(fl) # Next character
+        outputs = Dense(self.Y.shape[1], activation='softmax')(fl)  # Next character
         
         self.model = Model(inputs=inputs, outputs=outputs)
         self.model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
@@ -65,30 +75,47 @@ class TextLSTM(object):
         filepath="./Weights/weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
         checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
         self.callbacks_list = [checkpoint]
-        
+
+        self.network_ready = True
+
+    """
+        Train the model
+        process_input and build must have been run before trying this
+    """
     def train(self, epochs=15, batch_size=200):
-        self.model.fit(self.X, self.Y, epochs=epochs, batch_size=batch_size, callbacks=self.callbacks_list)
-    
+        if self.preprocessed and self.network_ready:
+            self.model.fit(self.X, self.Y, epochs=epochs, batch_size=batch_size, callbacks=self.callbacks_list)
+
+    """
+        Load pretrained model
+        build function must have been run before trying this
+    """
     def load(self, file):
-        self.model.load_weights(file)
-    
+        if self.network_ready:
+            self.model.load_weights(file)
+
+    """
+        Generate new text with the network
+        process_input and build must have been run before trying this
+    """
     def generate(self, size, name='generated_text.txt'):
-        start = np.random.randint(0, len(self.dataX)-1)
-        pattern = self.dataX[start]
-        
-        file = './Results/' + str(name)
-        f= open(file,"w+")
-        
-        for i in range(size):
-            	x = np.reshape(pattern, (1, len(pattern), 1))
-            	x = x / float(self.n_vocab)
-            	prediction = self.model.predict(x, verbose=0)
-            	index = np.argmax(prediction)
-            	result = self.int_to_char[index]
-            	seq_in = [self.int_to_char[value] for value in pattern]
-            	f.write(result)
-            	pattern.append(index)
-            	pattern = pattern[1:len(pattern)]
-        
-        print("\n Done")
-        f.close()
+        if self.preprocessed and self.network_ready:
+            start = np.random.randint(0, len(self.dataX)-1)
+            pattern = self.dataX[start]
+
+            file = './Results/' + str(name)
+            f = open(file, "w+")
+
+            for i in range(size):
+                x = np.reshape(pattern, (1, len(pattern), 1))
+                x = x / float(self.n_vocab)
+                prediction = self.model.predict(x, verbose=0)
+                index = np.argmax(prediction)
+                result = self.int_to_char[index]
+                seq_in = [self.int_to_char[value] for value in pattern]
+                f.write(result)
+                pattern.append(index)
+                pattern = pattern[1:len(pattern)]
+
+            print("\n Done")
+            f.close()
