@@ -27,7 +27,7 @@ class TextLSTM(object):
     """
     def process_input(self, file):
         self.raw_text = open(file, 'r', encoding='utf-8').read()
-        self.raw_text.lower()
+        self.raw_text = self.raw_text.lower()
         chars = sorted(list(set(self.raw_text)))
         self.char_to_int = dict((c, i) for i, c in enumerate(chars)) #Necessary for training
         self.int_to_char = dict((i, c) for i, c in enumerate(chars)) #Necessary for generation
@@ -39,17 +39,17 @@ class TextLSTM(object):
         print("Total Vocab: ", self.n_vocab)
         
         """Prepare the dataset of input to output pairs encoded as integers"""
-        seq_length = 50
+        self.seq_length = 32
         self.dataX = []
         dataY = []
-        for i in range(0, self.n_chars - seq_length, 1):
-            seq_in = self.raw_text[i:i + seq_length]
-            seq_out = self.raw_text[i + seq_length]
+        for i in range(0, self.n_chars - self.seq_length, 1):
+            seq_in = self.raw_text[i:i + self.seq_length]
+            seq_out = self.raw_text[i + self.seq_length]
             self.dataX.append([self.char_to_int[char] for char in seq_in])
             dataY.append(self.char_to_int[seq_out])
             
         """Reshape X to be [samples, time steps, features]"""
-        X = np.reshape(self.dataX, (len(self.dataX), seq_length, 1))
+        X = np.reshape(self.dataX, (len(self.dataX), self.seq_length, 1))
         """Normalize the data"""
         self.X = X / float(self.n_vocab)
         """One hot encode the output variable"""
@@ -64,7 +64,7 @@ class TextLSTM(object):
         inputs = Input(shape=(self.X.shape[1], self.X.shape[2]))
         l = inputs
         for layer in architecture:
-            l = LSTM(int(layer), dropout=0.5, recurrent_dropout=0.5, return_sequences=True)(l)
+            l = LSTM(int(layer), dropout=0.02, recurrent_dropout=0.02, return_sequences=True)(l)
         fl = Flatten()(l)
         outputs = Dense(self.Y.shape[1], activation='softmax')(fl)  # Next character
         
@@ -104,6 +104,9 @@ class TextLSTM(object):
             start = np.random.randint(0, len(self.dataX)-1)
             pattern = self.dataX[start]
 
+            print("Seed:")
+            print("\"", ''.join([self.int_to_char[value] for value in pattern]), "\"")
+
             file = './Results/' + str(name)
             f = open(file, "w+")
 
@@ -113,7 +116,6 @@ class TextLSTM(object):
                 prediction = self.model.predict(x, verbose=0)
                 index = np.argmax(prediction)
                 result = self.int_to_char[index]
-                seq_in = [self.int_to_char[value] for value in pattern]
                 f.write(result)
                 pattern.append(index)
                 pattern = pattern[1:len(pattern)]

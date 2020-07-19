@@ -49,11 +49,11 @@ class TextPredictor(object):
         Description: 
             Build a new model and train it on a given dataset.
         Example:
-            python main.py train "./datasets/Grimm_Fairy_Tales.txt" "LSTM" "300|300|300" -e 15 -b 100
+            python main.py train "./datasets/Grimm_Fairy_Tales.txt" "300|300|300" -e 15 -b 100
         '''
         parser = self.build_parser(description)
         parser.add_argument('-e', '--epochs', help='Number of training epochs, default is 50', default=50)
-        parser.add_argument('-b', '--batch_size', help='Batch size for training, default is 100', default=100)
+        parser.add_argument('-b', '--batch_size', help='Batch size for training, default is 200', default=200)
         args = parser.parse_args(sys.argv[2:])
 
         model = self.build_model(args.architecture, args.dataset)
@@ -64,12 +64,12 @@ class TextPredictor(object):
         Description: 
             Build a model, load the weights and generate text in a given file.
         Example:
-            python main.py produce "./Datasets/Grimm_Fairy_Tales.txt" "LSTM" "300|300|300" "./Weights/lstm-weights.hdf5" "example_names.txt" "50"
+            python main.py produce "./Datasets/Grimm_Fairy_Tales.txt" "300|300|300" "./Weights/lstm-weights.hdf5" "generated.txt" "1000"
         '''
         parser = self.build_parser(description)
         parser.add_argument('weights', help='Weights to be loaded. If you have no weights yet, you can train them using the train command. The weights will then be saved in the ./Weights folder.', default="./Weights/lstm-weights-names.hdf5")
         parser.add_argument('output', help='Name of the output file. You can find your output in this file in the Results folder after running the command', default="default_output.txt")
-        parser.add_argument('characters', help='Number of characters to produce')
+        parser.add_argument('characters', help='Number of characters to produce', default=1000)
         args = parser.parse_args(sys.argv[2:])
 
         model = self.build_model(args.architecture, args.dataset)
