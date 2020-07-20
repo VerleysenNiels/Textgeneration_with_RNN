@@ -39,7 +39,7 @@ class TextLSTM(object):
         print("Total Vocab: ", self.n_vocab)
         
         """Prepare the dataset of input to output pairs encoded as integers"""
-        self.seq_length = 32
+        self.seq_length = 100
         self.dataX = []
         dataY = []
         for i in range(0, self.n_chars - self.seq_length, 1):
