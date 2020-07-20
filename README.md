@@ -13,6 +13,12 @@ python main.py train -h
 python main.py produce -h
 ```
 
+To use version three you can use the following commands for training and generation.
+```
+python main.py train "./datasets/Grimm_Fairy_Tales.txt" "256|256|256|256"
+python main.py produce "./Datasets/Grimm_Fairy_Tales.txt" "256|256|256|256" "./Weights/lstm-weights-v3.hdf5" "generated.txt" "5000"
+```
+
 ## Datasets and results
 Free to use books can be found on the internet, for example: https://www.gutenberg.org/
 These should be downloaded as txt documents and the header should be removed. There are two examples in the Datasets folder.
