@@ -16,7 +16,7 @@ python main.py produce -h
 To use version three you can use the following commands for training and generation.
 ```
 python main.py train "./datasets/Grimm_Fairy_Tales.txt" "256|256|256|256"
-python main.py produce "./Datasets/Grimm_Fairy_Tales.txt" "256|256|256|256" "./Weights/lstm-weights-v3.hdf5" "generated.txt" "5000"
+python main.py produce "./Datasets/Grimm_Fairy_Tales.txt" "256|256|256|256" "./Weights/lstm-weights-v3.hdf5" "generated.txt" "5000" "corrected.txt"
 ```
 
 ## Datasets and results
