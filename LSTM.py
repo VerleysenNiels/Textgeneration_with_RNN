@@ -104,11 +104,11 @@ class TextLSTM(object):
             start = np.random.randint(0, len(self.dataX)-1)
             pattern = self.dataX[start]
 
-            print("Seed:")
-            print("\"", ''.join([self.int_to_char[value] for value in pattern]), "\"")
-
             file = './Results/' + str(name)
             f = open(file, "w+")
+
+            seed = ''.join([self.int_to_char[value] for value in pattern])
+            f.write(seed)
 
             for i in range(size):
                 x = np.reshape(pattern, (1, len(pattern), 1))

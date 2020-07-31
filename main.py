@@ -68,13 +68,15 @@ class TextPredictor(object):
         '''
         parser = self.build_parser(description)
         parser.add_argument('weights', help='Weights to be loaded. If you have no weights yet, you can train them using the train command. The weights will then be saved in the ./Weights folder.', default="./Weights/lstm-weights-names.hdf5")
-        parser.add_argument('output', help='Name of the output file. You can find your output in this file in the Results folder after running the command', default="default_output.txt")
+        parser.add_argument('output', help='Name of the output file. You can find your output in this file in the Results folder after running the command.', default="default_output.txt")
         parser.add_argument('characters', help='Number of characters to produce', default=1000)
+        parser.add_argument('spellcheck', help='Name of the output file for the spellchecker. You can find your output in this file in the Results folder after running the command.', default="default_output_corrected.txt")
         args = parser.parse_args(sys.argv[2:])
 
         model = self.build_model(args.architecture, args.dataset)
         model.load(args.weights)
         model.generate(int(args.characters), args.output)
+        self.spellcheck(args.output, args.spellcheck)
 
     """
         Build basic parser used in train and produce
@@ -85,6 +87,34 @@ class TextPredictor(object):
         parser.add_argument('architecture', help='Architecture of the model, defined by number of nodes in a layer and multiple layers are split by | character')
         return parser
 
+    """
+        Apply SymSpell autocorrection to the generated text
+        This sometimes removes punctuation and quotation marks
+    """
+    def spellcheck(self, file_path_in, file_path_out):
+        import pkg_resources
+        from symspellpy import SymSpell, Verbosity
+
+        sym_spell = SymSpell(max_dictionary_edit_distance=4, prefix_length=7)
+        dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
+
+        sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+
+        infile = './Results/' + str(file_path_in)
+        infile = open(infile, "r")
+
+        outfile = './Results/' + str(file_path_out)
+        outfile = open(outfile, "w")
+
+        for line in infile:
+            newline = line
+            for word in line.split(r'\W+'):
+                suggestion = sym_spell.lookup(word, Verbosity.CLOSEST, max_edit_distance=4, include_unknown=True)
+                newline = newline.replace(word, suggestion[0].term)
+            outfile.write(newline)
+
+        infile.close()
+        outfile.close()
 
 if __name__ == '__main__':
     TextPredictor()
